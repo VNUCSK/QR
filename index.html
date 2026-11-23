@@ -50,8 +50,11 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .sw button{width:28px;height:28px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
 .chk{display:flex;gap:8px;align-items:center;margin:10px 0 0;color:var(--ink);font-size:14px}
 .pv{position:sticky;top:16px}
-.stage{display:grid;place-items:center;padding:16px;border-radius:10px;background:repeating-conic-gradient(#8881 0 25%,transparent 0 50%) 0 0/16px 16px;min-height:280px}
-#qr canvas,#qr svg{max-width:100%;height:auto;display:block;border-radius:6px}
+.stage{display:grid;place-items:center;padding:20px;border-radius:10px;background:#e4e2db;border:1px solid var(--line);min-height:280px}
+@media (prefers-color-scheme:dark){.stage{background:#0c0c0e}}
+.stage.tp{background:repeating-conic-gradient(#c9c7c0 0 25%,#f1f0ec 0 50%) 0 0/16px 16px}
+@media (prefers-color-scheme:dark){.stage.tp{background:repeating-conic-gradient(#2a2a2f 0 25%,#3c3c43 0 50%) 0 0/16px 16px}}
+#qr canvas,#qr svg{max-width:100%;height:auto;display:block;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.22)}
 .btn{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600;width:100%;margin-top:8px}
 .btn.alt{background:var(--field);color:var(--ink);border-color:var(--line)}
 .msg{font-size:13px;color:var(--mute);margin:8px 0 0;min-height:20px;word-break:break-all}
@@ -68,7 +71,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <body>
 <div class="wrap">
 <div class="brand"><img src="logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="56"><h1>QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo</h1></div>
-<p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn, trang trí rồi tải mã QR về.</p>
+<p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn rồi tải mã QR về.</p>
 <div class="grid">
 <div>
 <div class="card">
@@ -86,8 +89,9 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <p class="msg" id="lm"></p>
 <ul class="list" id="ls"></ul>
 <div id="pendBox" class="hide">
-<button class="btn alt" id="dlJson">Tải links.json đã cập nhật</button>
-<p class="msg">Đưa file <b>links.json</b> này vào thư mục <b>QR/</b> trên GitHub (ghi đè file cũ) thì link rút gọn mới có hiệu lực.</p>
+<button class="btn alt" id="dlJson">Tải gói cập nhật (.zip)</button>
+<p class="msg">Giải nén file zip vào thư mục <b>QR/</b> (ghi đè), rồi chạy <b>git add .</b>, <b>git commit</b>, <b>git push</b>. Sau khi đẩy lên GitHub, quét mã sẽ chuyển thẳng tới link gốc.</p>
+<p class="msg" id="rmNote"></p>
 </div>
 </div>
 </div>
@@ -118,7 +122,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 </div>
 
 <div class="card">
-<h2>Logo &amp; nâng cao</h2>
+<h2>nâng cao</h2>
 <label for="logo">Chèn logo vào giữa (PNG, JPG, SVG)</label>
 <input type="file" id="logo" accept="image/*">
 <div id="logoCtl" class="hide">
@@ -153,10 +157,10 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 (function(){
 var $=function(id){return document.getElementById(id)};
 var S={dot:"rounded",sq:"extra-rounded",cd:"dot",logo:null,qr:null,mode:"full",key:null};
-var links={},pending={};
+var links={},pending={},removed={};
 var SITE="https://vnucsk.github.io/QR/";
 var base=/^https?:$/.test(location.protocol)?location.href.replace(/[?#].*$/,"").replace(/[^\/]*$/,""):SITE;
-function shortUrl(k){return base+"go/?k="+encodeURIComponent(k)}
+function shortUrl(k){return base+"go/"+encodeURIComponent(k)+"/"}
 function qrData(){
  var t=$("txt").value.trim();
  if(S.mode==="full")return $("txt").value;
@@ -216,6 +220,7 @@ function updateInfo(){
 }
 function draw(){
  clearTimeout(timer);
+ $("qr").parentNode.classList.toggle("tp",$("transp").checked);
  timer=setTimeout(function(){
   updateInfo();
   var box=$("qr"),d=qrData();
@@ -277,7 +282,7 @@ function renderList(){
   var b=document.createElement("button");b.className="sm";b.textContent="Dùng";
   b.onclick=function(){$("txt").value=links[k];S.key=k;setMode("short")};
   var d=document.createElement("button");d.className="sm";d.textContent="Xoá";
-  d.onclick=function(){delete links[k];pending[k]=0;pending["__changed"]=1;if(S.key===k)S.key=null;renderList();draw()};
+  d.onclick=function(){delete links[k];pending[k]=0;pending["__changed"]=1;removed[k]=1;if(S.key===k)S.key=null;renderList();draw()};
   li.appendChild(b);li.appendChild(d);ul.appendChild(li);
  });
  $("pendBox").classList.toggle("hide",!Object.keys(pending).some(function(k){return pending[k]||k==="__changed"}));
@@ -297,14 +302,59 @@ $("mk").onclick=function(){
  if(!k){var same=Object.keys(links).filter(function(x){return links[x]===u})[0];k=same||rnd()}
  if(links[k]&&links[k]!==u&&!confirm("Mã “"+k+"” đã trỏ tới link khác. Ghi đè?"))return;
  if(links[k]!==u){links[k]=u;pending[k]=1}
+ delete removed[k];
  S.key=k;
  renderList();draw();
 };
+function pageFor(u){
+ var a=esc(u),j=JSON.stringify(u).replace(/</g,"\\u003c");
+ return '<!DOCTYPE html>\n<html lang="vi"><head><meta charset="utf-8">\n'
+  +'<script>location.replace('+j+')<\/script>\n'
+  +'<meta http-equiv="refresh" content="0;url='+a+'">\n'
+  +'<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+  +'<meta name="robots" content="noindex">\n'
+  +'<link rel="canonical" href="'+a+'">\n'
+  +'<title>Đang chuyển hướng…</title></head>\n'
+  +'<body style="font:16px system-ui,sans-serif;text-align:center;padding:2em"><a href="'+a+'">Bấm vào đây nếu trang không tự chuyển</a></body></html>\n';
+}
+var CT=null;
+function crc32(b){
+ if(!CT){CT=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CT[n]=c>>>0}}
+ var c=0xFFFFFFFF;for(var i=0;i<b.length;i++)c=CT[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;
+}
+function makeZip(files){
+ var enc=new TextEncoder(),parts=[],cd=[],off=0,cdLen=0,d=new Date();
+ var tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+ var dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+ files.forEach(function(f){
+  var n=enc.encode(f.name),b=enc.encode(f.text),c=crc32(b);
+  var h=new DataView(new ArrayBuffer(30));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+  h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,c,true);h.setUint32(18,b.length,true);
+  h.setUint32(22,b.length,true);h.setUint16(26,n.length,true);h.setUint16(28,0,true);
+  parts.push(new Uint8Array(h.buffer),n,b);
+  var e=new DataView(new ArrayBuffer(46));
+  e.setUint32(0,0x02014b50,true);e.setUint16(4,20,true);e.setUint16(6,20,true);e.setUint16(8,0x0800,true);
+  e.setUint16(10,0,true);e.setUint16(12,tm,true);e.setUint16(14,dt,true);e.setUint32(16,c,true);
+  e.setUint32(20,b.length,true);e.setUint32(24,b.length,true);e.setUint16(28,n.length,true);
+  e.setUint32(42,off,true);
+  cd.push(new Uint8Array(e.buffer),n);cdLen+=46+n.length;
+  off+=30+n.length+b.length;
+ });
+ var z=new DataView(new ArrayBuffer(22));
+ z.setUint32(0,0x06054b50,true);z.setUint16(8,files.length,true);z.setUint16(10,files.length,true);
+ z.setUint32(12,cdLen,true);z.setUint32(16,off,true);
+ return new Blob(parts.concat(cd,[new Uint8Array(z.buffer)]),{type:"application/zip"});
+}
 $("dlJson").onclick=function(){
- var blob=new Blob([JSON.stringify(links,null,2)+"\n"],{type:"application/json"});
- var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="links.json";
+ var files=[{name:"links.json",text:JSON.stringify(links,null,2)+"\n"}];
+ Object.keys(links).forEach(function(k){files.push({name:"go/"+k+"/index.html",text:pageFor(links[k])})});
+ var blob=makeZip(files);
+ var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cap-nhat-qr.zip";
  document.body.appendChild(a);a.click();a.remove();
  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+ var r=Object.keys(removed);
+ $("rmNote").textContent=r.length?"Link đã xoá, hãy xoá thủ công thư mục: "+r.map(function(k){return"go/"+k}).join(", "):"";
 };
 
 draw();

@@ -16,13 +16,13 @@ a{color:#2f5bea}
 </style>
 </head>
 <body>
-<div><img src="../logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="64" style="height:64px;width:auto;max-width:90%"><p id="m">Đang chuyển hướng…</p></div>
+<div id="w" style="visibility:hidden"><img src="../logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="64" style="height:64px;width:auto;max-width:90%"><p id="m">Đang chuyển hướng…</p></div>
 <script>
 (function(){
   var m=document.getElementById("m");
   var q=new URLSearchParams(location.search);
   var k=(q.get("k")||location.hash.replace(/^#/,"")||"").trim();
-  function fail(t){m.innerHTML=t+'<br><a href="../">Về trang tạo mã QR</a>'}
+  function fail(t){document.getElementById("w").style.visibility="visible";m.innerHTML=t+'<br><a href="../">Về trang tạo mã QR</a>'}
   if(!k){fail("Thiếu mã link ngắn.");return}
   fetch("../links.json",{cache:"no-store"}).then(function(r){
     if(!r.ok)throw 0;return r.json();
