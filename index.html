@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo</title>
-<meta name="description" content="Công cụ tạo, rút gọn link mã QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo (VNU CSK).">
+<meta name="description" content="Công cụ tạo, rút gọn link và trang trí mã QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo (VNU CSK).">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -65,15 +65,13 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .list .k{font-weight:600;min-width:70px}
 .list .u{flex:1;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sm{padding:3px 8px;font-size:12px}
-.gh{margin-top:12px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--field)}
-.gh summary{cursor:pointer;font-weight:600;font-size:14px}
 .tag{font-size:11px;color:var(--accink);background:var(--acc);border-radius:6px;padding:1px 6px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="brand"><img src="logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="56"><h1>QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo</h1></div>
-<p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn rồi tải mã QR về.</p>
+<p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn, trang trí rồi tải mã QR về.</p>
 <div class="grid">
 <div>
 <div class="card">
@@ -82,26 +80,15 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <textarea id="txt">https://vnu.edu.vn</textarea>
 <div class="seg" role="group" aria-label="Kiểu link trong mã QR">
 <button type="button" id="mFull" aria-pressed="true">Link gốc<small>QR chứa đúng link đã nhập</small></button>
-<button type="button" id="mShort" aria-pressed="false">Link rút gọn<small>QR chứa link ngắn của trang này</small></button>
+<button type="button" id="mShort" aria-pressed="false">Link rút gọn<small>QR chứa link ngắn, lưu tự động</small></button>
 </div>
 <div id="shortBox" class="hide">
 <label for="lk">Mã ngắn (không bắt buộc, để trống sẽ tự tạo)</label>
-<input type="text" id="lk" placeholder="VD: hoithao" maxlength="40">
+<input type="text" id="lk" placeholder="VD: hoithao (3–30 ký tự)" maxlength="30">
 <button class="btn" id="mk">Tạo link rút gọn</button>
 <p class="msg" id="lm"></p>
 <ul class="list" id="ls"></ul>
-<details id="ghBox" class="gh">
-<summary id="ghSum">Kết nối GitHub (làm 1 lần)</summary>
-<p class="msg">Để link rút gọn tự lưu lên GitHub, tạo một token chỉ có quyền với repo này:<br>
-1. Đăng nhập GitHub bằng tài khoản <b>VNUCSK</b> → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token.<br>
-2. Repository access: <b>Only select repositories</b> → chọn <b>VNUCSK/QR</b>.<br>
-3. Permissions → Repository permissions → <b>Contents: Read and write</b>.<br>
-4. Tạo token, sao chép và dán vào ô dưới. Token chỉ lưu trong trình duyệt của máy này, không đưa lên GitHub.</p>
-<label for="tk">Token</label>
-<input type="password" id="tk" autocomplete="off" placeholder="github_pat_...">
-<div class="row"><button class="btn alt" id="tkSave">Lưu token</button><button class="btn alt hide" id="tkOut">Ngắt kết nối</button></div>
-<p class="msg" id="tkm"></p>
-</details>
+<p class="msg">Link được lưu tự động trên máy chủ: tạo xong là quét mã chuyển hướng được ngay, không cần tải file hay push GitHub.</p>
 </div>
 </div>
 
@@ -131,7 +118,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 </div>
 
 <div class="card">
-<h2>nâng cao</h2>
+<h2>Logo &amp; nâng cao</h2>
 <label for="logo">Chèn logo vào giữa (PNG, JPG, SVG)</label>
 <input type="file" id="logo" accept="image/*">
 <div id="logoCtl" class="hide">
@@ -169,7 +156,8 @@ var S={dot:"rounded",sq:"extra-rounded",cd:"dot",logo:null,qr:null,mode:"full",k
 var links={};
 var SITE="https://vnucsk.github.io/QR/";
 var base=/^https?:$/.test(location.protocol)?location.href.replace(/[?#].*$/,"").replace(/[^\/]*$/,""):SITE;
-function shortUrl(k){return base+"go/"+encodeURIComponent(k)+"/"}
+var API="https://qr.gislaptrinh.workers.dev";
+function shortUrl(k){return API+"/"+encodeURIComponent(k)}
 function qrData(){
  var t=$("txt").value.trim();
  if(S.mode==="full")return $("txt").value;
@@ -283,135 +271,43 @@ $("dlWebp").onclick=function(){save("webp")};
 
 /* ===== Link rút gọn tự quản lý ===== */
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function loadMine(){try{var m=JSON.parse(localStorage.getItem("qr_links")||"{}");return m&&typeof m==="object"?m:{}}catch(e){return{}}}
+function saveMine(){try{localStorage.setItem("qr_links",JSON.stringify(links))}catch(e){}}
 function renderList(){
  var ul=$("ls");ul.innerHTML="";
  Object.keys(links).forEach(function(k){
   var li=document.createElement("li");
-  li.innerHTML='<span class="k">'+esc(k)+'</span>'+'<span class="u" title="'+esc(links[k])+'">'+esc(links[k])+'</span>';
+  li.innerHTML='<span class="k">'+esc(k)+'</span><span class="u" title="'+esc(links[k])+'">'+esc(links[k])+'</span>';
   var b=document.createElement("button");b.className="sm";b.textContent="Dùng";
   b.onclick=function(){$("txt").value=links[k];S.key=k;setMode("short")};
-  var d=document.createElement("button");d.className="sm";d.textContent="Xoá";
-  d.onclick=function(){
-   if(!needTk($("lm")))return;
-   if(!confirm("Xoá link ngắn “"+k+"”? Mã QR đã in với link này sẽ ngừng hoạt động."))return;
-   busy(true,"Đang xoá trên GitHub…");
-   ghCommit(null,[k],"Xoá link ngắn "+k).then(function(map){
-    links=map;if(S.key===k)S.key=null;renderList();draw();
-    $("lm").textContent="Đã xoá “"+k+"” trên GitHub.";
-   }).catch(ghErr).then(function(){busy(false)});
-  };
+  var d=document.createElement("button");d.className="sm";d.textContent="Ẩn";
+  d.title="Chỉ ẩn khỏi danh sách trên máy này, link vẫn hoạt động";
+  d.onclick=function(){delete links[k];if(S.key===k)S.key=null;saveMine();renderList();draw()};
   li.appendChild(b);li.appendChild(d);ul.appendChild(li);
  });
 }
-fetch("links.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():{}}).then(function(m){links=m||{};renderList();syncKey();draw()}).catch(function(){renderList()});
-
-function rnd(){
- var c="abcdefghjkmnpqrstuvwxyz23456789",s="";
- for(var i=0;i<5;i++)s+=c[Math.floor(Math.random()*c.length)];
- return links[s]?rnd():s;
-}
-function pageFor(u){
- var a=esc(u),j=JSON.stringify(u).replace(/</g,"\\u003c");
- return '<!DOCTYPE html>\n<html lang="vi"><head><meta charset="utf-8">\n'
-  +'<script>location.replace('+j+')<\/script>\n'
-  +'<meta http-equiv="refresh" content="0;url='+a+'">\n'
-  +'<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-  +'<meta name="robots" content="noindex">\n'
-  +'<link rel="canonical" href="'+a+'">\n'
-  +'<title>Đang chuyển hướng…</title></head>\n'
-  +'<body style="font:16px system-ui,sans-serif;text-align:center;padding:2em"><a href="'+a+'">Bấm vào đây nếu trang không tự chuyển</a></body></html>\n';
-}
-
-/* ===== Tự động lưu lên GitHub ===== */
-var GH={o:"VNUCSK",r:"QR",b:"main"},TKEY="qr_gh_token";
-function getTk(){try{return localStorage.getItem(TKEY)||""}catch(e){return ""}}
-function setTk(v){try{if(v)localStorage.setItem(TKEY,v);else localStorage.removeItem(TKEY)}catch(e){}}
-function ghUi(){
- var on=!!getTk();
- $("ghSum").textContent=on?"GitHub: đã kết nối ✓":"Kết nối GitHub (làm 1 lần)";
- $("tkOut").classList.toggle("hide",!on);$("tk").value="";
-}
-function gh(path,o){
- o=o||{};
- var h={"Authorization":"Bearer "+getTk(),"Accept":o.raw?"application/vnd.github.raw+json":"application/vnd.github+json"};
- if(o.body)h["Content-Type"]="application/json";
- return fetch("https://api.github.com/repos/"+GH.o+"/"+GH.r+path,{method:o.method||"GET",headers:h,body:o.body?JSON.stringify(o.body):undefined,cache:"no-store"}).then(function(r){
-  if(!r.ok){var e=new Error("HTTP "+r.status);e.status=r.status;throw e}
-  return o.raw?r.text():r.json();
- });
-}
-function exists(path){
- return gh("/contents/"+path+"?ref="+GH.b).then(function(){return true}).catch(function(e){if(e.status===404)return false;throw e});
-}
-function ghCommitOnce(add,del,msg){
- var ref;
- return gh("/git/ref/heads/"+GH.b).then(function(r){
-  ref=r.object.sha;
-  var remote=gh("/contents/links.json?ref="+GH.b,{raw:true}).then(function(t){try{return JSON.parse(t)||{}}catch(e){return {}}}).catch(function(e){if(e.status===404)return {};throw e});
-  var dels=Promise.all((del||[]).map(function(k){return exists("go/"+k+"/index.html")}));
-  return Promise.all([gh("/git/commits/"+ref),remote,dels]);
- }).then(function(a){
-  var map=a[1],items=[];
-  Object.keys(add||{}).forEach(function(k){map[k]=add[k];items.push({path:"go/"+k+"/index.html",mode:"100644",type:"blob",content:pageFor(add[k])})});
-  (del||[]).forEach(function(k,i){delete map[k];if(a[2][i])items.push({path:"go/"+k+"/index.html",mode:"100644",type:"blob",sha:null})});
-  items.push({path:"links.json",mode:"100644",type:"blob",content:JSON.stringify(map,null,2)+"\n"});
-  return gh("/git/trees",{method:"POST",body:{base_tree:a[0].tree.sha,tree:items}}).then(function(t){
-   return gh("/git/commits",{method:"POST",body:{message:msg,tree:t.sha,parents:[ref]}});
-  }).then(function(c){
-   return gh("/git/refs/heads/"+GH.b,{method:"PATCH",body:{sha:c.sha}});
-  }).then(function(){return map});
- });
-}
-function ghCommit(add,del,msg){
- return ghCommitOnce(add,del,msg).catch(function(e){
-  if(e.status===409||e.status===422)return ghCommitOnce(add,del,msg);
-  throw e;
- });
-}
-function ghErr(e){
- var t;
- if(e.status===401)t="Token sai hoặc đã hết hạn. Hãy tạo token mới trong mục “Kết nối GitHub”.";
- else if(e.status===403||e.status===404)t="Token không có quyền ghi vào "+GH.o+"/"+GH.r+" (cần quyền Contents: Read and write).";
- else t="Không lưu được lên GitHub ("+(e.message||"lỗi mạng")+"). Hãy thử lại.";
- $("lm").textContent=t;
-}
-function busy(on,txt){
- $("mk").disabled=on;
- if(on)$("lm").textContent=txt||"";
-}
-function needTk(m){
- if(getTk())return true;
- m.textContent="Hãy kết nối GitHub trước (mở mục “Kết nối GitHub” bên dưới).";
- $("ghBox").open=true;
- return false;
-}
-$("tkSave").onclick=function(){
- var v=$("tk").value.trim(),m=$("tkm");m.textContent="";
- if(!/^[A-Za-z0-9_]{20,}$/.test(v)){m.textContent="Token không hợp lệ, hãy dán lại.";return}
- setTk(v);m.textContent="Đang kiểm tra…";
- gh("").then(function(r){
-  if(r.permissions&&r.permissions.push===false){setTk("");ghUi();m.textContent="Token chưa có quyền ghi. Hãy chọn Contents: Read and write.";return}
-  ghUi();m.textContent="Đã kết nối thành công.";
- }).catch(function(e){setTk("");ghUi();m.textContent=e.status===401?"Token sai hoặc hết hạn.":"Token không truy cập được "+GH.o+"/"+GH.r+".";});
-};
-$("tkOut").onclick=function(){setTk("");ghUi();$("tkm").textContent="Đã ngắt kết nối. Token đã bị xoá khỏi trình duyệt này."};
-ghUi();
+links=loadMine();renderList();syncKey();
 
 $("mk").onclick=function(){
- var u=$("txt").value.trim(),k=$("lk").value.trim(),m=$("lm");
+ var u=$("txt").value.trim(),k=$("lk").value.trim().toLowerCase(),m=$("lm"),btn=$("mk");
  m.textContent="";
  if(!/^https?:\/\/\S+$/i.test(u)){m.textContent="Hãy nhập link bắt đầu bằng http:// hoặc https:// ở ô phía trên.";return}
- if(k&&!/^[A-Za-z0-9_-]{2,40}$/.test(k)){m.textContent="Mã ngắn chỉ gồm chữ không dấu, số, dấu - và _ (2–40 ký tự).";return}
- if(!k){var same=Object.keys(links).filter(function(x){return links[x]===u})[0];k=same||rnd()}
- if(links[k]===u){S.key=k;renderList();draw();m.textContent="Link này đã có sẵn, dùng được ngay.";return}
- if(!needTk(m))return;
- if(links[k]&&!confirm("Mã “"+k+"” đã trỏ tới link khác. Ghi đè?"))return;
- var add={};add[k]=u;
- busy(true,"Đang lưu lên GitHub…");
- ghCommit(add,null,"Thêm link ngắn "+k).then(function(map){
-  links=map;S.key=k;renderList();draw();
-  m.textContent="Đã lưu lên GitHub. Link sẽ dùng được sau khoảng 1–2 phút khi trang cập nhật xong.";
- }).catch(ghErr).then(function(){busy(false)});
+ if(k&&!/^[a-z0-9-]{3,30}$/.test(k)){m.textContent="Mã ngắn chỉ gồm chữ không dấu, số và dấu - (3–30 ký tự).";return}
+ /* Đã tạo trước đó trên máy này thì dùng lại, không tạo trùng */
+ var same=Object.keys(links).filter(function(x){return links[x]===u&&(!k||x===k)})[0];
+ if(same){S.key=same;renderList();draw();m.textContent="Link này đã được tạo trước đó.";return}
+ btn.disabled=true;m.textContent="Đang tạo link…";
+ fetch(API+"/api/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,key:k})})
+ .then(function(r){
+  if(!r.ok)return r.text().then(function(t){throw new Error(t||("Lỗi "+r.status))});
+  return r.json();
+ }).then(function(d){
+  links[d.key]=u;saveMine();S.key=d.key;
+  m.textContent="Đã tạo: "+d.short;
+  renderList();draw();
+ }).catch(function(e){
+  m.textContent=(e&&e.message&&e.message!=="Failed to fetch")?e.message:"Không kết nối được máy chủ rút gọn. Hãy thử lại sau.";
+ }).then(function(){btn.disabled=false});
 };
 
 draw();
