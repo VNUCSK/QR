@@ -28,6 +28,7 @@ h1{font-size:24px;line-height:1.25;margin:0;letter-spacing:-.02em}
 .seg button[aria-pressed=true] small{color:inherit;opacity:.85}
 .info{font-size:13px;margin:10px 0 0;padding:8px 10px;border-radius:9px;background:var(--field);border:1px solid var(--line);word-break:break-all;overflow-wrap:anywhere;max-height:120px;overflow-y:auto}
 .info b{display:block;color:var(--acc)}
+.info .hl{display:inline-block;margin-top:2px;padding:2px 8px;border-radius:6px;background:var(--acc);color:var(--accink);font-weight:700;font-size:14px}
 .sm.logoPick{margin-top:8px}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 @media (max-width:820px){.grid{grid-template-columns:1fr}.pv{order:-1;position:static!important}}
@@ -106,7 +107,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <div><label for="c1">Màu mã</label><input type="color" id="c1" value="#1f3a8a"></div>
 <div><label for="c2">Màu thứ hai</label><input type="color" id="c2" value="#7c3aed"></div>
 <div><label for="cbg">Màu nền</label><input type="color" id="cbg" value="#ffffff"></div>
-<div><label for="cc">Màu gốc</label><input type="color" id="cc" value="#0f172a"></div>
+<div><label for="cc">Màu góc</label><input type="color" id="cc" value="#0f172a"></div>
 </div>
 <label class="chk"><input type="checkbox" id="grad"> Dùng chuyển sắc cho mã</label>
 <label class="chk"><input type="checkbox" id="ccOn"> Dùng màu riêng cho 3 góc</label>
@@ -210,7 +211,7 @@ function updateInfo(){
  if(!d){i.classList.add("hide");return}
  i.classList.remove("hide");
  i.innerHTML=S.mode==="short"
-  ?'<b>Mã QR đang chứa LINK RÚT GỌN</b>'+esc(d)+'<br>→ Mở ra: '+esc($("txt").value.trim())
+  ?'<b>Mã QR đang chứa LINK RÚT GỌN</b>Link gốc: '+esc($("txt").value.trim())+'<br>Link rút gọn: <span class="hl">'+esc(d)+'</span>'
   :'<b>Mã QR đang chứa LINK GỐC</b>'+esc(d);
 }
 function draw(){
