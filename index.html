@@ -156,7 +156,7 @@ var S={dot:"rounded",sq:"extra-rounded",cd:"dot",logo:null,qr:null,mode:"full",k
 var links={};
 var SITE="https://vnucsk.github.io/QR/";
 var base=/^https?:$/.test(location.protocol)?location.href.replace(/[?#].*$/,"").replace(/[^\/]*$/,""):SITE;
-var API="https://qr.gislaptrinh.workers.dev";
+var API="https://qr.vnucsk.workers.dev";
 function shortUrl(k){return API+"/"+encodeURIComponent(k)}
 function qrData(){
  var t=$("txt").value.trim();
