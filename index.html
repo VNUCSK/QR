@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo</title>
-<meta name="description" content="Công cụ tạo, rút gọn link và trang trí mã QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo (VNU CSK).">
+<meta name="description" content="Công cụ tạo, rút gọn link mã QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -26,17 +26,17 @@ h1{font-size:24px;line-height:1.25;margin:0;letter-spacing:-.02em}
 .seg button small{display:block;font-size:12px;color:var(--mute)}
 .seg button[aria-pressed=true]{background:var(--acc);color:var(--accink);font-weight:600}
 .seg button[aria-pressed=true] small{color:inherit;opacity:.85}
-.info{font-size:13px;margin:10px 0 0;padding:8px 10px;border-radius:9px;background:var(--field);border:1px solid var(--line);word-break:break-all}
+.info{font-size:13px;margin:10px 0 0;padding:8px 10px;border-radius:9px;background:var(--field);border:1px solid var(--line);word-break:break-all;overflow-wrap:anywhere;max-height:120px;overflow-y:auto}
 .info b{display:block;color:var(--acc)}
 .sm.logoPick{margin-top:8px}
-.grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 @media (max-width:820px){.grid{grid-template-columns:1fr}.pv{order:-1;position:static!important}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .card+.card{margin-top:12px}
 h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:0 0 12px;font-weight:600}
 label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
 input[type=text],input[type=url],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--field);color:var(--ink);font:inherit}
-textarea{min-height:84px;resize:vertical}
+textarea{min-height:84px;max-height:200px;resize:vertical;overflow:auto;overflow-wrap:anywhere;word-break:break-all;white-space:pre-wrap}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
 .chip,.btn,.sm{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--field);color:var(--ink);border-radius:9px;padding:7px 12px}
 .chip[aria-pressed=true]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
@@ -57,7 +57,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 #qr canvas,#qr svg{max-width:100%;height:auto;display:block;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.22)}
 .btn{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600;width:100%;margin-top:8px}
 .btn.alt{background:var(--field);color:var(--ink);border-color:var(--line)}
-.msg{font-size:13px;color:var(--mute);margin:8px 0 0;min-height:20px;word-break:break-all}
+.msg{font-size:13px;color:var(--mute);margin:8px 0 0;min-height:20px;word-break:break-all;overflow-wrap:anywhere;max-height:90px;overflow-y:auto}
 .hide{display:none}
 .short{margin-top:10px;font-size:14px;word-break:break-all}
 .list{margin:10px 0 0;padding:0;list-style:none;font-size:13px}
@@ -71,7 +71,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <body>
 <div class="wrap">
 <div class="brand"><img src="logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="56"><h1>QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo</h1></div>
-<p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn, trang trí rồi tải mã QR về.</p>
+<p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn rồi tải mã QR về.</p>
 <div class="grid">
 <div>
 <div class="card">
@@ -87,8 +87,6 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <input type="text" id="lk" placeholder="VD: hoithao (3–30 ký tự)" maxlength="30">
 <button class="btn" id="mk">Tạo link rút gọn</button>
 <p class="msg" id="lm"></p>
-<ul class="list" id="ls"></ul>
-<p class="msg">Link được lưu tự động trên máy chủ: tạo xong là quét mã chuyển hướng được ngay, không cần tải file hay push GitHub.</p>
 </div>
 </div>
 
@@ -108,7 +106,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <div><label for="c1">Màu mã</label><input type="color" id="c1" value="#1f3a8a"></div>
 <div><label for="c2">Màu thứ hai</label><input type="color" id="c2" value="#7c3aed"></div>
 <div><label for="cbg">Màu nền</label><input type="color" id="cbg" value="#ffffff"></div>
-<div><label for="cc">Màu góc</label><input type="color" id="cc" value="#0f172a"></div>
+<div><label for="cc">Màu gốc</label><input type="color" id="cc" value="#0f172a"></div>
 </div>
 <label class="chk"><input type="checkbox" id="grad"> Dùng chuyển sắc cho mã</label>
 <label class="chk"><input type="checkbox" id="ccOn"> Dùng màu riêng cho 3 góc</label>
@@ -118,7 +116,7 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 </div>
 
 <div class="card">
-<h2>Logo &amp; nâng cao</h2>
+<h2>nâng cao</h2>
 <label for="logo">Chèn logo vào giữa (PNG, JPG, SVG)</label>
 <input type="file" id="logo" accept="image/*">
 <div id="logoCtl" class="hide">
@@ -174,7 +172,7 @@ var OPT={
  cornerSq:[["square","Vuông"],["extra-rounded","Bo tròn"],["dot","Tròn"]],
  cornerDot:[["square","Vuông"],["dot","Tròn"]]
 };
-var SW=[["#1f3a8a","#7c3aed"],["#0f766e","#22c55e"],["#be123c","#f97316"],["#111827","#6b7280"],["#7c2d12","#f59e0b"],["#0369a1","#06b6d4"],["#86198f","#ec4899"]];
+var SW=[["#000000","#000000"],["#1f3a8a","#7c3aed"],["#0f766e","#22c55e"],["#be123c","#f97316"],["#111827","#6b7280"],["#7c2d12","#f59e0b"],["#0369a1","#06b6d4"],["#86198f","#ec4899"]];
 
 function chips(id,list,key){
  var box=$(id);
@@ -187,8 +185,8 @@ function chips(id,list,key){
 }
 chips("dotType",OPT.dotType,"dot");chips("cornerSq",OPT.cornerSq,"sq");chips("cornerDot",OPT.cornerDot,"cd");
 SW.forEach(function(p){
- var b=document.createElement("button");b.style.background="linear-gradient(135deg,"+p[0]+","+p[1]+")";b.title=p[0]+" → "+p[1];
- b.onclick=function(){$("c1").value=p[0];$("c2").value=p[1];$("cc").value=p[0];$("grad").checked=true;draw()};
+ var b=document.createElement("button");b.style.background="linear-gradient(135deg,"+p[0]+","+p[1]+")";b.title=p[0]===p[1]?"Đen":p[0]+" → "+p[1];
+ b.onclick=function(){$("c1").value=p[0];$("c2").value=p[1];$("cc").value=p[0];$("grad").checked=p[0]!==p[1];draw()};
  $("swatches").appendChild(b);
 });
 
@@ -212,7 +210,7 @@ function updateInfo(){
  if(!d){i.classList.add("hide");return}
  i.classList.remove("hide");
  i.innerHTML=S.mode==="short"
-  ?'<b>Mã QR đang chứa LINK RÚT GỌN</b>'+esc(d)+'<br>→ mở ra: '+esc($("txt").value.trim())
+  ?'<b>Mã QR đang chứa LINK RÚT GỌN</b>'+esc(d)+'<br>→ Mở ra: '+esc($("txt").value.trim())
   :'<b>Mã QR đang chứa LINK GỐC</b>'+esc(d);
 }
 function draw(){
@@ -274,6 +272,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;
 function loadMine(){try{var m=JSON.parse(localStorage.getItem("qr_links")||"{}");return m&&typeof m==="object"?m:{}}catch(e){return{}}}
 function saveMine(){try{localStorage.setItem("qr_links",JSON.stringify(links))}catch(e){}}
 function renderList(){
+ return;
  var ul=$("ls");ul.innerHTML="";
  Object.keys(links).forEach(function(k){
   var li=document.createElement("li");
@@ -303,7 +302,7 @@ $("mk").onclick=function(){
   return r.json();
  }).then(function(d){
   links[d.key]=u;saveMine();S.key=d.key;
-  m.textContent="Đã tạo: "+d.short;
+  m.textContent=(d.existed?"Link này đã có sẵn, dùng lại mã: ":"Đã tạo: ")+d.short;
   renderList();draw();
  }).catch(function(e){
   m.textContent=(e&&e.message&&e.message!=="Failed to fetch")?e.message:"Không kết nối được máy chủ rút gọn. Hãy thử lại sau.";
