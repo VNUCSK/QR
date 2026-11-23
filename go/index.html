@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Đang chuyển hướng… – QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f6f5f1;color:#1d1d1f;text-align:center;padding:16px}
+@media (prefers-color-scheme:dark){body{background:#141416;color:#f1f1f3}}
+a{color:#2f5bea}
+@media (prefers-color-scheme:dark){img{background:#fff;border-radius:10px;padding:4px 8px}}
+</style>
+</head>
+<body>
+<div><img src="../logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="64" style="height:64px;width:auto;max-width:90%"><p id="m">Đang chuyển hướng…</p></div>
+<script>
+(function(){
+  var m=document.getElementById("m");
+  var q=new URLSearchParams(location.search);
+  var k=(q.get("k")||location.hash.replace(/^#/,"")||"").trim();
+  function fail(t){m.innerHTML=t+'<br><a href="../">Về trang tạo mã QR</a>'}
+  if(!k){fail("Thiếu mã link ngắn.");return}
+  fetch("../links.json",{cache:"no-store"}).then(function(r){
+    if(!r.ok)throw 0;return r.json();
+  }).then(function(map){
+    var u=map[k];
+    if(!u){fail("Không tìm thấy link ngắn “"+k.replace(/[<>&"]/g,"")+"”.");return}
+    if(!/^https?:\/\//i.test(u)){fail("Link đích không hợp lệ.");return}
+    location.replace(u);
+  }).catch(function(){fail("Không tải được danh sách link.")});
+})();
+</script>
+</body>
+</html>
