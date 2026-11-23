@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CÔNG CỤ TẠO QR CỦA PHÒNG KN&ĐMST</title>
+<title>Công cụ tạo QR của Phòng KN&ĐMST</title>
 <meta name="description" content="Công cụ tạo, rút gọn link mã QR của Phòng Khởi nghiệp và Đổi mới Sáng tạo">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -66,6 +66,16 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .list .k{font-weight:600;min-width:70px}
 .list .u{flex:1;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sm{padding:3px 8px;font-size:12px}
+.tabs{max-width:420px;margin:0 0 16px}
+.toast{position:fixed;top:16px;left:50%;transform:translate(-50%,-140%);z-index:99;max-width:min(92vw,520px);padding:12px 16px;border-radius:12px;background:#b42318;color:#fff;font-size:14px;box-shadow:0 8px 28px rgba(0,0,0,.3);transition:transform .25s ease;pointer-events:none}
+.toast.ok{background:#1a7f37}
+.toast.show{transform:translate(-50%,0)}
+.lcard .list li{flex-wrap:wrap;align-items:flex-start}
+.lcard .list .k{min-width:90px}
+.lcard .list .info2{flex:1 1 260px;min-width:0;word-break:break-all;overflow-wrap:anywhere}
+.lcard .list .info2 a{color:var(--acc);font-weight:600}
+.lcard .list .info2 span{display:block;color:var(--mute)}
+.empty{color:var(--mute);margin:0}
 .tag{font-size:11px;color:var(--accink);background:var(--acc);border-radius:6px;padding:1px 6px}
 </style>
 </head>
@@ -73,7 +83,10 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 <div class="wrap">
 <div class="brand"><img src="logo.png" alt="Logo VNU Entrepreneurship &amp; Innovation" height="56"><h1>Công cụ tạo QR của Phòng KN&ĐMST</h1></div>
 <p class="sub">Nhập link, chọn giữ nguyên hoặc rút gọn rồi tải mã QR về.</p>
-<div class="grid">
+<div class="seg tabs" role="tablist"><button type="button" id="tCreate" aria-pressed="true">Tạo mã QR</button><button type="button" id="tList" aria-pressed="false">Link đã rút gọn <small id="cnt"></small></button></div>
+<div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+<div id="paneList" class="hide"><div class="card lcard"><h2>Danh sách link đã rút gọn</h2><p class="msg" style="margin:0 0 4px">Danh sách lưu trên trình duyệt của máy này.</p><ul class="list" id="ls"></ul></div></div>
+<div class="grid" id="paneCreate">
 <div>
 <div class="card">
 <h2>Nội dung mã QR</h2>
@@ -273,26 +286,47 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;
 function loadMine(){try{var m=JSON.parse(localStorage.getItem("qr_links")||"{}");return m&&typeof m==="object"?m:{}}catch(e){return{}}}
 function saveMine(){try{localStorage.setItem("qr_links",JSON.stringify(links))}catch(e){}}
 function renderList(){
- return;
- var ul=$("ls");ul.innerHTML="";
- Object.keys(links).forEach(function(k){
-  var li=document.createElement("li");
-  li.innerHTML='<span class="k">'+esc(k)+'</span><span class="u" title="'+esc(links[k])+'">'+esc(links[k])+'</span>';
+ var ul=$("ls"),ks=Object.keys(links);ul.innerHTML="";
+ $("cnt").textContent=ks.length?"("+ks.length+")":"";
+ if(!ks.length){ul.innerHTML='<li><p class="empty">Chưa có link nào được rút gọn.</p></li>';return}
+ ks.reverse().forEach(function(k){
+  var li=document.createElement("li"),su=shortUrl(k);
+  li.innerHTML='<span class="k">'+esc(k)+'</span><div class="info2"><a href="'+esc(su)+'" target="_blank" rel="noopener">'+esc(su)+'</a><span>Link gốc: '+esc(links[k])+'</span></div>';
   var b=document.createElement("button");b.className="sm";b.textContent="Dùng";
-  b.onclick=function(){$("txt").value=links[k];S.key=k;setMode("short")};
+  b.onclick=function(){$("txt").value=links[k];S.key=k;showTab("create");setMode("short")};
+  var c=document.createElement("button");c.className="sm";c.textContent="Sao chép";
+  c.onclick=function(){
+   var done=function(){toast("Đã sao chép: "+su,"ok")};
+   if(navigator.clipboard)navigator.clipboard.writeText(su).then(done,function(){toast("Không sao chép được, hãy sao chép thủ công.")});
+   else toast("Không sao chép được, hãy sao chép thủ công.");
+  };
   var d=document.createElement("button");d.className="sm";d.textContent="Ẩn";
   d.title="Chỉ ẩn khỏi danh sách trên máy này, link vẫn hoạt động";
   d.onclick=function(){delete links[k];if(S.key===k)S.key=null;saveMine();renderList();draw()};
-  li.appendChild(b);li.appendChild(d);ul.appendChild(li);
+  li.appendChild(b);li.appendChild(c);li.appendChild(d);ul.appendChild(li);
  });
 }
+var tt=null;
+function toast(t,kind){
+ var el=$("toast");el.textContent=t;el.className="toast"+(kind==="ok"?" ok":"");
+ void el.offsetWidth;el.classList.add("show");
+ clearTimeout(tt);tt=setTimeout(function(){el.classList.remove("show")},5000);
+}
+function showTab(n){
+ $("paneCreate").classList.toggle("hide",n!=="create");
+ $("paneList").classList.toggle("hide",n!=="list");
+ $("tCreate").setAttribute("aria-pressed",n==="create");
+ $("tList").setAttribute("aria-pressed",n==="list");
+}
+$("tCreate").onclick=function(){showTab("create")};
+$("tList").onclick=function(){renderList();showTab("list")};
 links=loadMine();renderList();syncKey();
 
 $("mk").onclick=function(){
  var u=$("txt").value.trim(),k=$("lk").value.trim().toLowerCase(),m=$("lm"),btn=$("mk");
  m.textContent="";
- if(!/^https?:\/\/\S+$/i.test(u)){m.textContent="Hãy nhập link bắt đầu bằng http:// hoặc https:// ở ô phía trên.";return}
- if(k&&!/^[a-z0-9-]{3,30}$/.test(k)){m.textContent="Mã ngắn chỉ gồm chữ không dấu, số và dấu - (3–30 ký tự).";return}
+ if(!/^https?:\/\/\S+$/i.test(u)){toast("Hãy nhập link bắt đầu bằng http:// hoặc https:// ở ô phía trên.");return}
+ if(k&&!/^[a-z0-9-]{3,30}$/.test(k)){toast("Mã ngắn chỉ gồm chữ không dấu, số và dấu - (3–30 ký tự).");return}
  /* Đã tạo trước đó trên máy này thì dùng lại, không tạo trùng */
  var same=Object.keys(links).filter(function(x){return links[x]===u&&(!k||x===k)})[0];
  if(same){S.key=same;renderList();draw();m.textContent="Link này đã được tạo trước đó.";return}
@@ -303,10 +337,10 @@ $("mk").onclick=function(){
   return r.json();
  }).then(function(d){
   links[d.key]=u;saveMine();S.key=d.key;
-  m.textContent=(d.existed?"Link này đã có sẵn, dùng lại mã: ":"Đã tạo: ")+d.short;
+  m.textContent=(d.existed?"Link này đã có sẵn, dùng lại mã: ":"Đã tạo: ")+d.short;toast((d.existed?"Link này đã có sẵn, dùng lại mã: ":"Đã tạo: ")+d.short,"ok");
   renderList();draw();
  }).catch(function(e){
-  m.textContent=(e&&e.message&&e.message!=="Failed to fetch")?e.message:"Không kết nối được máy chủ rút gọn. Hãy thử lại sau.";
+  m.textContent="";toast((e&&e.message&&e.message!=="Failed to fetch")?e.message:"Không kết nối được máy chủ rút gọn. Hãy thử lại sau.");
  }).then(function(){btn.disabled=false});
 };
 
