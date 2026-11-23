@@ -292,18 +292,13 @@ function renderList(){
  ks.reverse().forEach(function(k){
   var li=document.createElement("li"),su=shortUrl(k);
   li.innerHTML='<span class="k">'+esc(k)+'</span><div class="info2"><a href="'+esc(su)+'" target="_blank" rel="noopener">'+esc(su)+'</a><span>Link gốc: '+esc(links[k])+'</span></div>';
-  var b=document.createElement("button");b.className="sm";b.textContent="Dùng";
-  b.onclick=function(){$("txt").value=links[k];S.key=k;showTab("create");setMode("short")};
   var c=document.createElement("button");c.className="sm";c.textContent="Sao chép";
   c.onclick=function(){
    var done=function(){toast("Đã sao chép: "+su,"ok")};
    if(navigator.clipboard)navigator.clipboard.writeText(su).then(done,function(){toast("Không sao chép được, hãy sao chép thủ công.")});
    else toast("Không sao chép được, hãy sao chép thủ công.");
   };
-  var d=document.createElement("button");d.className="sm";d.textContent="Ẩn";
-  d.title="Chỉ ẩn khỏi danh sách trên máy này, link vẫn hoạt động";
-  d.onclick=function(){delete links[k];if(S.key===k)S.key=null;saveMine();renderList();draw()};
-  li.appendChild(b);li.appendChild(c);li.appendChild(d);ul.appendChild(li);
+  li.appendChild(c);ul.appendChild(li);
  });
 }
 var tt=null;
